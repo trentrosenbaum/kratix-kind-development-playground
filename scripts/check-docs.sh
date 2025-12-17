@@ -104,7 +104,7 @@ run_markdown_lint() {
     cd "$PROJECT_ROOT"
 
     # Sync vale packages if needed
-    if [[ ! -d ".vale/styles" ]]; then
+    if [[ ! -d "$SCRIPT_DIR/.vale/styles" ]]; then
         echo "Syncing vale packages..."
         vale --config "$SCRIPT_DIR/.vale.ini" sync
     fi
