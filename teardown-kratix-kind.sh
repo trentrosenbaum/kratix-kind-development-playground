@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Kratix Cleanup Script for Kind Clusters
+# Kratix Teardown Script for Kind Clusters
 # This script removes the Kratix kind clusters
 
 # Color codes
@@ -28,7 +28,7 @@ log_warning() {
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════════════╗"
-echo "║           Kratix Cleanup Script for Kind Clusters                ║"
+echo "║           Kratix Teardown Script for Kind Clusters                ║"
 echo "╚═══════════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -41,12 +41,12 @@ read -p "Are you sure you want to continue? (yes/no): " -r
 echo
 
 if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-    echo "Cleanup cancelled."
+    echo "Teardown cancelled."
     exit 0
 fi
 
 echo ""
-log_info "Starting cleanup..."
+log_info "Starting teardown..."
 echo ""
 
 # Delete platform cluster
@@ -68,7 +68,7 @@ else
 fi
 
 echo ""
-log_success "Cleanup complete! 🎉"
+log_success "Teardown complete! 🎉"
 echo ""
 
 # Show remaining clusters

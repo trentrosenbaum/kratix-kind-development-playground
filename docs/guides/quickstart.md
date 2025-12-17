@@ -134,7 +134,7 @@ kubectl --context $WORKER get pods --all-namespaces
 To remove the Kind clusters and all resources:
 
 ```bash
-./cleanup-kratix-kind.sh
+./teardown-kratix-kind.sh
 ```
 
 ## Next Steps

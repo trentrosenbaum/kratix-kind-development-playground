@@ -37,7 +37,7 @@ See the [Quick Start Guide](docs/guides/quickstart.md) for detailed instructions
 | `setup-kratix-kind.sh` | Create clusters and install Kratix (~5-7 minutes) |
 | `shutdown-kratix-kind.sh` | Stop clusters without deleting them |
 | `startup-kratix-kind.sh` | Start previously stopped clusters |
-| `cleanup-kratix-kind.sh` | Delete clusters and all resources |
+| `teardown-kratix-kind.sh` | Delete clusters and all resources |
 
 ## Documentation
 
