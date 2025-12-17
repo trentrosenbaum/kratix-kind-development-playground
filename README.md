@@ -41,7 +41,7 @@ See the [Quick Start Guide](docs/guides/quickstart.md) for detailed instructions
 
 ## Documentation
 
-- [Quick Start Guide](docs/guides/quickstart.md) - Installation and first Promise
+- [Guides](docs/guides/index.md) - Step-by-step tutorials
 - [FAQ](docs/faq.md) - Common questions and answers
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
 
