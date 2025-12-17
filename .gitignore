@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment
+.envrc.local
+.envrc
+
+# Temporary files
+*.tmp
+*.log
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Notes (personal scratch files)
+notes.md
