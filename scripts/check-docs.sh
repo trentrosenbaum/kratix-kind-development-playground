@@ -106,10 +106,10 @@ run_markdown_lint() {
     # Sync vale packages if needed
     if [[ ! -d ".vale/styles" ]]; then
         echo "Syncing vale packages..."
-        vale sync
+        vale --config "$SCRIPT_DIR/.vale.ini" sync
     fi
 
-    if vale .; then
+    if vale --config "$SCRIPT_DIR/.vale.ini" .; then
         print_success "Markdown linting passed"
     else
         print_error "Markdown linting failed"
@@ -128,7 +128,7 @@ run_spell_check() {
 
     cd "$PROJECT_ROOT"
 
-    if typos .; then
+    if typos --config "$SCRIPT_DIR/typos.toml" .; then
         print_success "Spell check passed"
     else
         print_error "Spell check failed"
@@ -148,7 +148,7 @@ run_link_check() {
     cd "$PROJECT_ROOT"
 
     # Find all markdown files and pass them to lychee
-    if find . -name "*.md" -not -path "./.git/*" -not -path "./node_modules/*" | xargs lychee --config .lychee.toml; then
+    if find . -name "*.md" -not -path "./.git/*" -not -path "./node_modules/*" | xargs lychee --config "$SCRIPT_DIR/.lychee.toml"; then
         print_success "Link validation passed"
     else
         print_error "Link validation failed"

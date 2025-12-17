@@ -1,9 +1,0 @@
-# URLs to ignore during link checking
-# These may block automated requests or require authentication
-
-# Slack invite links (require auth)
-https://kratix.io/slack
-
-# localhost URLs (not accessible during CI)
-http://localhost:*
-https://localhost:*
