@@ -2,7 +2,10 @@
 # https://lychee.cli.rs/
 
 # Exclude URLs that are known to block automated requests or require auth
-exclude_path = [".lycheeignore"]
+exclude = [
+    "^https://kratix\\.io/slack$",
+    "^https?://localhost",
+]
 
 # Include file:// links (for checking local file references)
 include_verbatim = true

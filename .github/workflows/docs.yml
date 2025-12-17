@@ -6,19 +6,17 @@ on:
     branches: [main]
     paths:
       - '**.md'
-      - '.vale.ini'
-      - 'typos.toml'
-      - '.lychee.toml'
-      - '.lycheeignore'
+      - 'scripts/.vale.ini'
+      - 'scripts/typos.toml'
+      - 'scripts/.lychee.toml'
       - '.github/workflows/docs.yml'
   pull_request:
     branches: [main]
     paths:
       - '**.md'
-      - '.vale.ini'
-      - 'typos.toml'
-      - '.lychee.toml'
-      - '.lycheeignore'
+      - 'scripts/.vale.ini'
+      - 'scripts/typos.toml'
+      - 'scripts/.lychee.toml'
       - '.github/workflows/docs.yml'
 
 jobs:
@@ -33,6 +31,7 @@ jobs:
         uses: errata-ai/vale-action@v2
         with:
           files: .
+          config: scripts/.vale.ini
           fail_on_error: true
 
   spell-check:
@@ -44,6 +43,8 @@ jobs:
 
       - name: Check spelling with typos
         uses: crate-ci/typos@master
+        with:
+          config: scripts/typos.toml
 
   link-check:
     name: Link Validation
@@ -55,5 +56,5 @@ jobs:
       - name: Check links with lychee
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --config .lychee.toml .
+          args: --config scripts/.lychee.toml .
           fail: true
