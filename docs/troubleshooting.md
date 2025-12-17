@@ -8,10 +8,10 @@ Common issues and their solutions when running Kratix on Kind clusters.
 
 **Problem:** Script fails during installation
 
-**Solution:** Run the cleanup script and try again:
+**Solution:** Run the teardown script and try again:
 
 ```bash
-./cleanup-kratix-kind.sh
+./teardown-kratix-kind.sh
 ./setup-kratix-kind.sh
 ```
 
@@ -149,10 +149,10 @@ kubectl --context $PLATFORM run test --rm -it --image=busybox -- wget -qO- https
 
 **Problem:** `startup-kratix-kind.sh` fails or clusters are unhealthy
 
-**Solution:** If clusters are in a bad state, clean up and recreate:
+**Solution:** If clusters are in a bad state, tear them down and recreate:
 
 ```bash
-./cleanup-kratix-kind.sh
+./teardown-kratix-kind.sh
 ./setup-kratix-kind.sh
 ```
 

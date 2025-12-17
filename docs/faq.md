@@ -159,10 +159,10 @@ Restart with:
 
 ### How do I completely remove everything?
 
-Run the cleanup script:
+Run the teardown script:
 
 ```bash
-./cleanup-kratix-kind.sh
+./teardown-kratix-kind.sh
 ```
 
 This deletes both Kind clusters and all associated resources.
