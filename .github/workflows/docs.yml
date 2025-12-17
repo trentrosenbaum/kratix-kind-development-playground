@@ -31,7 +31,7 @@ jobs:
         uses: errata-ai/vale-action@v2
         with:
           files: .
-          config: scripts/.vale.ini
+          config: ${{ github.workspace }}/scripts/.vale.ini
           fail_on_error: true
 
   spell-check:
