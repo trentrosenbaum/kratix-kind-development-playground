@@ -1,10 +1,10 @@
 # Kratix Kind Setup
 
-Automated scripts for setting up Kratix on Kind clusters with a platform/worker architecture.
+Automated scripts for setting up Kratix on Kind clusters with a platform/worker archetecture.
 
 ## Overview
 
-This project provides scripts to create a complete local Kratix environment:
+This project provides scripts to create a complete local Kratix environmnet:
 
 - **Platform Cluster** - Where Kratix runs and Promises are defined
 - **Worker Cluster** - Where workloads are deployed
@@ -44,6 +44,7 @@ See the [Quick Start Guide](docs/guides/quickstart.md) for detailed instructions
 - [Quick Start Guide](docs/guides/quickstart.md) - Installation and first Promise
 - [FAQ](docs/faq.md) - Common questions and answers
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
+- [Advanced Guide](docs/guides/advanced.md) - Advanced configuration options
 
 ## Configuration Reference
 
