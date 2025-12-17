@@ -28,7 +28,7 @@ export PLATFORM='kind-platform-cluster'
 export WORKER='kind-worker-cluster'
 ```
 
-See the [Quick Start Guide](docs/quickstart.md) for detailed instructions and examples.
+See the [Quick Start Guide](docs/guides/quickstart.md) for detailed instructions and examples.
 
 ## Scripts
 
@@ -41,7 +41,7 @@ See the [Quick Start Guide](docs/quickstart.md) for detailed instructions and ex
 
 ## Documentation
 
-- [Quick Start Guide](docs/quickstart.md) - Installation and first Promise
+- [Quick Start Guide](docs/guides/quickstart.md) - Installation and first Promise
 - [FAQ](docs/faq.md) - Common questions and answers
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
 
