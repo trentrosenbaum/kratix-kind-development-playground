@@ -23,5 +23,6 @@ kubeconfig
 # Notes (personal scratch files)
 notes.md
 
-# Vale styles (downloaded by vale sync)
-.vale/
+# Vale styles (downloaded by vale sync, but keep custom vocabulary)
+.vale/styles/Google/
+.vale/styles/write-good/
