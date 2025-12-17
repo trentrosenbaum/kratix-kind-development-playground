@@ -1,0 +1,58 @@
+name: Documentation Checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '.vale.ini'
+      - 'typos.toml'
+      - '.lychee.toml'
+      - '.lycheeignore'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.md'
+      - '.vale.ini'
+      - 'typos.toml'
+      - '.lychee.toml'
+      - '.lycheeignore'
+      - '.github/workflows/docs.yml'
+
+jobs:
+  lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Vale Linter
+        uses: errata-ai/vale-action@v2
+        with:
+          files: .
+          fail_on_error: true
+
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check spelling with typos
+        uses: crate-ci/typos@master
+
+  link-check:
+    name: Link Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check links with lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config .lychee.toml .
+          fail: true

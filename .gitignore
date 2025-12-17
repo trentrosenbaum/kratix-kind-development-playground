@@ -22,3 +22,6 @@ kubeconfig
 
 # Notes (personal scratch files)
 notes.md
+
+# Vale styles (downloaded by vale sync)
+.vale/

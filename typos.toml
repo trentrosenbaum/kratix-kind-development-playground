@@ -1,0 +1,21 @@
+[default]
+extend-ignore-re = [
+    # Ignore base64 encoded strings
+    "[A-Za-z0-9+/]{40,}={0,2}",
+    # Ignore URLs
+    "https?://[^\\s]+",
+]
+
+[default.extend-words]
+# Project-specific words to ignore
+kratix = "kratix"
+Kratix = "Kratix"
+syntasso = "syntasso"
+Syntasso = "Syntasso"
+
+[files]
+extend-exclude = [
+    ".git/",
+    ".vale/",
+    "node_modules/",
+]

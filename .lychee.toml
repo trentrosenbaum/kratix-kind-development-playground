@@ -1,0 +1,30 @@
+# Lychee link checker configuration
+# https://lychee.cli.rs/
+
+# Exclude URLs that are known to block automated requests or require auth
+exclude_path = [".lycheeignore"]
+
+# Include file:// links (for checking local file references)
+include_verbatim = true
+
+# Timeout for requests (seconds)
+timeout = 30
+
+# Number of retries for failed requests
+max_retries = 3
+
+# Accept these status codes as valid
+accept = [200, 204, 301, 302, 429]
+
+# Skip these domains that block automated requests
+exclude_all_private = false
+
+# Root directory for relative links
+root_dir = "."
+
+# Output format
+format = "detailed"
+
+# Don't fail on missing files (just report)
+# Set to true if you want stricter checking
+no_progress = true
