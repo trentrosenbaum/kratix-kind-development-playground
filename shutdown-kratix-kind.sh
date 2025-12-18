@@ -12,8 +12,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-PLATFORM_CLUSTER_NAME="platform-cluster"
-WORKER_CLUSTER_NAME="worker-cluster"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config.env}"
+
+if [[ -f "${CONFIG_FILE}" ]]; then
+    # shellcheck source=config.env
+    source "${CONFIG_FILE}"
+else
+    # Fallback defaults if config file is missing
+    PLATFORM_CLUSTER_NAME="platform-cluster"
+    WORKER_CLUSTER_NAME="worker-cluster"
+fi
 
 log_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"

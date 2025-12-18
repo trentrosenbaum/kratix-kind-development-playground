@@ -13,13 +13,49 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-PLATFORM_CLUSTER_NAME="platform-cluster"
-WORKER_CLUSTER_NAME="worker-cluster"
-PLATFORM_CONTEXT="kind-${PLATFORM_CLUSTER_NAME}"
-WORKER_CONTEXT="kind-${WORKER_CLUSTER_NAME}"
-K8S_VERSION="v1.31.9"
-KRATIX_VERSION="latest"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config.env}"
+
+if [[ -f "${CONFIG_FILE}" ]]; then
+    # shellcheck source=config.env
+    source "${CONFIG_FILE}"
+else
+    echo "Warning: Config file not found at ${CONFIG_FILE}, using defaults"
+    # Fallback defaults if config file is missing
+    PLATFORM_CLUSTER_NAME="platform-cluster"
+    WORKER_CLUSTER_NAME="worker-cluster"
+    PLATFORM_CONTEXT="kind-${PLATFORM_CLUSTER_NAME}"
+    WORKER_CONTEXT="kind-${WORKER_CLUSTER_NAME}"
+    K8S_VERSION="v1.31.9"
+    KRATIX_VERSION="latest"
+    CERT_MANAGER_VERSION="v1.13.2"
+    CERT_MANAGER_URL="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
+    KRATIX_URL="https://github.com/syntasso/kratix/releases/${KRATIX_VERSION}/download/kratix.yaml"
+    MINIO_INSTALL_URL="https://raw.githubusercontent.com/syntasso/kratix/main/config/samples/minio-install.yaml"
+    FLUX_INSTALL_URL="https://raw.githubusercontent.com/syntasso/kratix/main/hack/destination/gitops-tk-install.yaml"
+    KRATIX_PLATFORM_NAMESPACE="kratix-platform-system"
+    KRATIX_WORKER_NAMESPACE="kratix-worker-system"
+    FLUX_NAMESPACE="flux-system"
+    CERT_MANAGER_NAMESPACE="cert-manager"
+    MINIO_SECRET_NAME="minio-credentials"
+    MINIO_SECRET_NAMESPACE="default"
+    MINIO_BUCKET_NAME="kratix"
+    MINIO_NODEPORT="31337"
+    MINIO_SERVICE_DNS="minio.${KRATIX_PLATFORM_NAMESPACE}.svc.cluster.local"
+    WORKER_DEPENDENCIES_PATH="${WORKER_CLUSTER_NAME}/dependencies"
+    WORKER_RESOURCES_PATH="${WORKER_CLUSTER_NAME}/resources"
+    BUCKET_STATE_STORE_NAME="default"
+    DESTINATION_NAME="${WORKER_CLUSTER_NAME}"
+    DESTINATION_LABEL_KEY="environment"
+    DESTINATION_LABEL_VALUE="dev"
+    KRATIX_API_VERSION="platform.kratix.io/v1alpha1"
+    FLUX_SOURCE_API_VERSION="source.toolkit.fluxcd.io/v1beta2"
+    FLUX_KUSTOMIZE_API_VERSION="kustomize.toolkit.fluxcd.io/v1"
+    CLUSTER_CREATE_TIMEOUT="120s"
+    DEPLOYMENT_WAIT_TIMEOUT="300s"
+    FLUX_BUCKET_INTERVAL="10s"
+fi
 
 # Functions
 log_info() {
@@ -85,7 +121,7 @@ create_platform_cluster() {
     kind create cluster \
         --image "kindest/node:${K8S_VERSION}" \
         --name "${PLATFORM_CLUSTER_NAME}" \
-        --wait 120s
+        --wait "${CLUSTER_CREATE_TIMEOUT}"
     
     kubectl config use-context "${PLATFORM_CONTEXT}"
     log_success "Platform cluster created: ${PLATFORM_CONTEXT}"
@@ -102,168 +138,164 @@ create_worker_cluster() {
     kind create cluster \
         --image "kindest/node:${K8S_VERSION}" \
         --name "${WORKER_CLUSTER_NAME}" \
-        --wait 120s
+        --wait "${CLUSTER_CREATE_TIMEOUT}"
     
     log_success "Worker cluster created: ${WORKER_CONTEXT}"
 }
 
 install_cert_manager() {
     log_info "Installing cert-manager on platform cluster..."
-    
-    kubectl --context "${PLATFORM_CONTEXT}" apply -f \
-        https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
-    
+
+    kubectl --context "${PLATFORM_CONTEXT}" apply -f "${CERT_MANAGER_URL}"
+
     log_info "Waiting for cert-manager to be ready..."
     kubectl --context "${PLATFORM_CONTEXT}" wait --for=condition=Available \
-        --timeout=300s \
-        -n cert-manager \
+        --timeout="${DEPLOYMENT_WAIT_TIMEOUT}" \
+        -n "${CERT_MANAGER_NAMESPACE}" \
         deployment/cert-manager \
         deployment/cert-manager-cainjector \
         deployment/cert-manager-webhook
-    
+
     log_success "cert-manager installed and ready"
 }
 
 install_kratix() {
     log_info "Installing Kratix on platform cluster..."
-    
-    kubectl --context "${PLATFORM_CONTEXT}" apply -f \
-        "https://github.com/syntasso/kratix/releases/${KRATIX_VERSION}/download/kratix.yaml"
+
+    kubectl --context "${PLATFORM_CONTEXT}" apply -f "${KRATIX_URL}"
 
     log_info "Waiting for Kratix to be ready..."
     kubectl --context "${PLATFORM_CONTEXT}" wait --for=condition=Available \
-        --timeout=300s \
-        -n kratix-platform-system \
+        --timeout="${DEPLOYMENT_WAIT_TIMEOUT}" \
+        -n "${KRATIX_PLATFORM_NAMESPACE}" \
         deployment/kratix-platform-controller-manager
-    
+
     log_success "Kratix installed and ready"
 }
 
 install_minio() {
     log_info "Installing MinIO as state store on platform cluster..."
-    
-    kubectl --context "${PLATFORM_CONTEXT}" apply -f \
-        "https://raw.githubusercontent.com/syntasso/kratix/main/config/samples/minio-install.yaml"
-    
+
+    kubectl --context "${PLATFORM_CONTEXT}" apply -f "${MINIO_INSTALL_URL}"
+
     log_info "Waiting for MinIO to be ready..."
     kubectl --context "${PLATFORM_CONTEXT}" wait --for=condition=Available \
-        --timeout=300s \
-        -n kratix-platform-system \
+        --timeout="${DEPLOYMENT_WAIT_TIMEOUT}" \
+        -n "${KRATIX_PLATFORM_NAMESPACE}" \
         deployment/minio
-    
+
     log_success "MinIO installed and ready"
 }
 
 configure_state_store() {
     log_info "Configuring BucketStateStore..."
-    
+
     cat <<EOF | kubectl --context "${PLATFORM_CONTEXT}" apply -f -
-apiVersion: platform.kratix.io/v1alpha1
+apiVersion: ${KRATIX_API_VERSION}
 kind: BucketStateStore
 metadata:
-  name: default
+  name: ${BUCKET_STATE_STORE_NAME}
 spec:
-  endpoint: minio.kratix-platform-system.svc.cluster.local
+  endpoint: ${MINIO_SERVICE_DNS}
   insecure: true
-  bucketName: kratix
+  bucketName: ${MINIO_BUCKET_NAME}
   secretRef:
-    name: minio-credentials
-    namespace: default
+    name: ${MINIO_SECRET_NAME}
+    namespace: ${MINIO_SECRET_NAMESPACE}
 EOF
-    
+
     log_success "BucketStateStore configured"
 }
 
 install_flux_on_worker() {
     log_info "Installing Flux on worker cluster..."
-    
+
     # Install Flux (Toolkit)
-    kubectl --context "${WORKER_CONTEXT}" apply -f \
-        "https://raw.githubusercontent.com/syntasso/kratix/main/hack/destination/gitops-tk-install.yaml"
-    
+    kubectl --context "${WORKER_CONTEXT}" apply -f "${FLUX_INSTALL_URL}"
+
     log_info "Waiting for Flux to be ready..."
     kubectl --context "${WORKER_CONTEXT}" wait --for=condition=Available \
-        --timeout=300s \
-        -n flux-system \
+        --timeout="${DEPLOYMENT_WAIT_TIMEOUT}" \
+        -n "${FLUX_NAMESPACE}" \
         deployment/source-controller \
         deployment/kustomize-controller
-    
+
     log_success "Flux installed on worker cluster"
 }
 
 configure_flux_on_worker() {
     log_info "Configuring Flux to watch MinIO on worker cluster..."
-    
+
     # Create MinIO credentials secret on worker
-    kubectl --context "${WORKER_CONTEXT}" create namespace kratix-worker-system --dry-run=client -o yaml | \
+    kubectl --context "${WORKER_CONTEXT}" create namespace "${KRATIX_WORKER_NAMESPACE}" --dry-run=client -o yaml | \
         kubectl --context "${WORKER_CONTEXT}" apply -f -
-    
+
     # Get MinIO credentials from platform cluster
-    MINIO_ACCESS_KEY=$(kubectl --context "${PLATFORM_CONTEXT}" get secret minio-credentials -n default -o jsonpath='{.data.accessKeyID}' | base64 -d)
-    MINIO_SECRET_KEY=$(kubectl --context "${PLATFORM_CONTEXT}" get secret minio-credentials -n default -o jsonpath='{.data.secretAccessKey}' | base64 -d)
-    
+    MINIO_ACCESS_KEY=$(kubectl --context "${PLATFORM_CONTEXT}" get secret "${MINIO_SECRET_NAME}" -n "${MINIO_SECRET_NAMESPACE}" -o jsonpath='{.data.accessKeyID}' | base64 -d)
+    MINIO_SECRET_KEY=$(kubectl --context "${PLATFORM_CONTEXT}" get secret "${MINIO_SECRET_NAME}" -n "${MINIO_SECRET_NAMESPACE}" -o jsonpath='{.data.secretAccessKey}' | base64 -d)
+
     # Get MinIO endpoint - need to use the platform cluster's IP
     PLATFORM_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${PLATFORM_CLUSTER_NAME}-control-plane")
-    
+
     # Create secret on worker cluster (Flux expects 'accesskey' and 'secretkey')
-    kubectl --context "${WORKER_CONTEXT}" create secret generic minio-credentials \
-        -n kratix-worker-system \
+    kubectl --context "${WORKER_CONTEXT}" create secret generic "${MINIO_SECRET_NAME}" \
+        -n "${KRATIX_WORKER_NAMESPACE}" \
         --from-literal=accesskey="${MINIO_ACCESS_KEY}" \
         --from-literal=secretkey="${MINIO_SECRET_KEY}" \
         --dry-run=client -o yaml | \
         kubectl --context "${WORKER_CONTEXT}" apply -f -
-    
+
     # Create Flux Bucket source pointing to MinIO on platform cluster
     cat <<EOF | kubectl --context "${WORKER_CONTEXT}" apply -f -
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: ${FLUX_SOURCE_API_VERSION}
 kind: Bucket
 metadata:
   name: kratix-workload-dependencies
-  namespace: kratix-worker-system
+  namespace: ${KRATIX_WORKER_NAMESPACE}
 spec:
-  interval: 10s
+  interval: ${FLUX_BUCKET_INTERVAL}
   provider: generic
-  bucketName: kratix
-  endpoint: ${PLATFORM_IP}:31337
+  bucketName: ${MINIO_BUCKET_NAME}
+  endpoint: ${PLATFORM_IP}:${MINIO_NODEPORT}
   insecure: true
   secretRef:
-    name: minio-credentials
+    name: ${MINIO_SECRET_NAME}
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: ${FLUX_SOURCE_API_VERSION}
 kind: Bucket
 metadata:
   name: kratix-workload-resources
-  namespace: kratix-worker-system
+  namespace: ${KRATIX_WORKER_NAMESPACE}
 spec:
-  interval: 10s
+  interval: ${FLUX_BUCKET_INTERVAL}
   provider: generic
-  bucketName: kratix
-  endpoint: ${PLATFORM_IP}:31337
+  bucketName: ${MINIO_BUCKET_NAME}
+  endpoint: ${PLATFORM_IP}:${MINIO_NODEPORT}
   insecure: true
   secretRef:
-    name: minio-credentials
+    name: ${MINIO_SECRET_NAME}
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: ${FLUX_KUSTOMIZE_API_VERSION}
 kind: Kustomization
 metadata:
   name: kratix-workload-dependencies
-  namespace: kratix-worker-system
+  namespace: ${KRATIX_WORKER_NAMESPACE}
 spec:
-  interval: 10s
-  path: worker-cluster/dependencies
+  interval: ${FLUX_BUCKET_INTERVAL}
+  path: ${WORKER_DEPENDENCIES_PATH}
   prune: true
   sourceRef:
     kind: Bucket
     name: kratix-workload-dependencies
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
+apiVersion: ${FLUX_KUSTOMIZE_API_VERSION}
 kind: Kustomization
 metadata:
   name: kratix-workload-resources
-  namespace: kratix-worker-system
+  namespace: ${KRATIX_WORKER_NAMESPACE}
 spec:
-  interval: 10s
-  path: worker-cluster/resources
+  interval: ${FLUX_BUCKET_INTERVAL}
+  path: ${WORKER_RESOURCES_PATH}
   prune: true
   sourceRef:
     kind: Bucket
@@ -271,48 +303,48 @@ spec:
   dependsOn:
     - name: kratix-workload-dependencies
 EOF
-    
+
     log_success "Flux configured on worker cluster"
 }
 
 register_worker_destination() {
     log_info "Registering worker cluster as a Destination..."
-    
+
     cat <<EOF | kubectl --context "${PLATFORM_CONTEXT}" apply -f -
-apiVersion: platform.kratix.io/v1alpha1
+apiVersion: ${KRATIX_API_VERSION}
 kind: Destination
 metadata:
-  name: worker-cluster
+  name: ${DESTINATION_NAME}
   labels:
-    environment: dev
+    ${DESTINATION_LABEL_KEY}: ${DESTINATION_LABEL_VALUE}
 spec:
-  path: worker-cluster
+  path: ${DESTINATION_NAME}
   stateStoreRef:
-    name: default
+    name: ${BUCKET_STATE_STORE_NAME}
     kind: BucketStateStore
 EOF
-    
+
     log_success "Worker cluster registered as Destination"
 }
 
 verify_installation() {
     log_info "Verifying installation..."
-    
+
     echo ""
     echo "Platform Cluster Resources:"
     echo "=========================="
-    kubectl --context "${PLATFORM_CONTEXT}" get pods -n kratix-platform-system
+    kubectl --context "${PLATFORM_CONTEXT}" get pods -n "${KRATIX_PLATFORM_NAMESPACE}"
     echo ""
     kubectl --context "${PLATFORM_CONTEXT}" get bucketstatestores
     echo ""
     kubectl --context "${PLATFORM_CONTEXT}" get destinations
-    
+
     echo ""
     echo "Worker Cluster Resources:"
     echo "========================"
-    kubectl --context "${WORKER_CONTEXT}" get pods -n kratix-worker-system
-    kubectl --context "${WORKER_CONTEXT}" get pods -n flux-system
-    
+    kubectl --context "${WORKER_CONTEXT}" get pods -n "${KRATIX_WORKER_NAMESPACE}"
+    kubectl --context "${WORKER_CONTEXT}" get pods -n "${FLUX_NAMESPACE}"
+
     echo ""
     log_success "Installation verification complete"
 }

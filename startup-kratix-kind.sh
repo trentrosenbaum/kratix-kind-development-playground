@@ -12,10 +12,22 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-PLATFORM_CLUSTER_NAME="platform-cluster"
-WORKER_CLUSTER_NAME="worker-cluster"
-PLATFORM_CONTEXT="kind-${PLATFORM_CLUSTER_NAME}"
-WORKER_CONTEXT="kind-${WORKER_CLUSTER_NAME}"
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${CONFIG_FILE:-${SCRIPT_DIR}/config.env}"
+
+if [[ -f "${CONFIG_FILE}" ]]; then
+    # shellcheck source=config.env
+    source "${CONFIG_FILE}"
+else
+    # Fallback defaults if config file is missing
+    PLATFORM_CLUSTER_NAME="platform-cluster"
+    WORKER_CLUSTER_NAME="worker-cluster"
+    PLATFORM_CONTEXT="kind-${PLATFORM_CLUSTER_NAME}"
+    WORKER_CONTEXT="kind-${WORKER_CLUSTER_NAME}"
+    KRATIX_PLATFORM_NAMESPACE="kratix-platform-system"
+    FLUX_NAMESPACE="flux-system"
+fi
 
 log_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
@@ -126,19 +138,19 @@ echo ""
 log_info "Waiting for Kubernetes components to recover..."
 
 # Wait for critical pods to be ready
-wait_for_pods "$PLATFORM_CONTEXT" "kratix-platform-system"
-wait_for_pods "$WORKER_CONTEXT" "flux-system"
+wait_for_pods "$PLATFORM_CONTEXT" "${KRATIX_PLATFORM_NAMESPACE}"
+wait_for_pods "$WORKER_CONTEXT" "${FLUX_NAMESPACE}"
 
 # Show cluster status
 echo ""
 echo "Platform Cluster Status:"
 echo "========================"
-kubectl --context "$PLATFORM_CONTEXT" get pods -n kratix-platform-system 2>/dev/null || echo "  Pods not ready yet"
+kubectl --context "$PLATFORM_CONTEXT" get pods -n "${KRATIX_PLATFORM_NAMESPACE}" 2>/dev/null || echo "  Pods not ready yet"
 
 echo ""
 echo "Worker Cluster Status:"
 echo "====================="
-kubectl --context "$WORKER_CONTEXT" get pods -n flux-system 2>/dev/null || echo "  Pods not ready yet"
+kubectl --context "$WORKER_CONTEXT" get pods -n "${FLUX_NAMESPACE}" 2>/dev/null || echo "  Pods not ready yet"
 
 echo ""
 log_success "Kratix clusters are running"
