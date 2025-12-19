@@ -318,7 +318,6 @@ metadata:
   labels:
     ${DESTINATION_LABEL_KEY}: ${DESTINATION_LABEL_VALUE}
 spec:
-  path: ${DESTINATION_NAME}
   stateStoreRef:
     name: ${BUCKET_STATE_STORE_NAME}
     kind: BucketStateStore
