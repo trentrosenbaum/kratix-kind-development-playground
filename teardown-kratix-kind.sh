@@ -19,6 +19,7 @@ if [[ -f "${CONFIG_FILE}" ]]; then
     # shellcheck source=config.env
     source "${CONFIG_FILE}"
 else
+    echo "Warning: Config file not found at ${CONFIG_FILE}, using defaults"
     # Fallback defaults if config file is missing
     PLATFORM_CLUSTER_NAME="platform-cluster"
     WORKER_CLUSTER_NAME="worker-cluster"
