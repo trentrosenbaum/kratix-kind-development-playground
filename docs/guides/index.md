@@ -6,8 +6,8 @@ Step-by-step tutorials to help you get started with Kratix on Kind clusters.
 
 | Guide | Description |
 |-------|-------------|
-| [Quick Start](quickstart.md) | Set up Kratix on Kind clusters and deploy your first Promise |
-| [Create a Hello World Promise](create-hello-world-promise.md) | Build your first custom Promise from scratch |
+| [Quick Start](quickstart.md) | Set up Kratix and create your first Promise |
+| [Deploying the Jenkins Promise](deploying-jenkins-promise.md) | Deploy Jenkins from the Kratix marketplace |
 
 ## Operations
 
