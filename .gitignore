@@ -20,6 +20,9 @@
 kubeconfig
 *.kubeconfig
 
+# Claude Code
+.claude/
+
 # Notes (personal scratch files)
 notes.md
 
